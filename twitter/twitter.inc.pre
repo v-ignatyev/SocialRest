@@ -1,0 +1,74 @@
+<?php
+/**
+*   Twitter API wrapper
+* 
+*   @author vladimir.ignatyev@ridev.ru
+*/
+    require_once ('../error_raiser.inc');   
+    require_once ('../rest_client.inc');
+    require_once ('twitter_errors.inc');
+
+//    twitter.inc Configuration 
+
+    if (!$config) {
+        $config = array ();
+    }
+
+    $config['TWITTER_URL'] = 'http://twitter.com/';
+    $config['TWITTER_SEARCH_API'] = 'http://search.twitter.com/';
+
+    class Twitter extends ErrorRaiser
+    {
+        private $_Username;
+        private $_Password;
+        private $_LastQuery;
+        private $_Format = JSON;
+        
+        private $_Connection;
+        
+        private $_FormatAliases = array (JSON=>'json', XML=>'xml', ATOM=>'atom', RSS=>'rss');
+                          
+        function Init ($Username = '', $Password = '', $Format = JSON) {
+            if ($Username && $Password) {
+                $this->_Username = $Username;
+                $this->_Password = $Password;
+            }
+            $_FormatAliases[$this->_Format] = $Format;
+            $this->_FlushError();
+        }
+                       
+        private function Method ($name, $subname, $type, $data, $need_authentification = true) {
+            global $config;
+            $url = $config['TWITTER_URL'].$name.($subname?'/'.$subname:'').'.'.$this->_FormatAliases[$this->_Format];
+            $object = array ();
+            if ($need_authentification) {
+                $object = $this->_Connection->RequestAndDecode($url, $type, $data, array ('Username'=>$this->_Username, 'Password'=>$this->_Password));
+            } else
+            {
+                $object = $this->_Connection->RequestAndDecode($url, $type, $data);
+            }
+            
+            if (!$object) {
+                $err = $this->_Connection->GetLastError();
+                $this->_Error ($err['ErrNo'], $err['Message']);
+                return 0;
+            }
+            return $object;
+        }             
+
+        private function _Search ($name, $data) {
+            global $config; 
+            $url = $config['TWITTER_SEARCH_API'].$name.'.'.$this->_FormatAliases[$this->_Format];
+            $object = $this->_Connection->RequestAndDecode($url, GET, $data);
+            if (!$object) {
+                $err = $this->_Connection->GetLastError();
+                $this->_Error ($err['ErrNo'], $err['Message']);
+                return 0;
+            }
+            return $object;
+        }     
+        
+        function __construct ($Username = '', $Password = '', $Format = JSON) {
+            $this->_Connection = new RestClient ();
+            $this->Init($Username, $Password, $Format);
+        }       

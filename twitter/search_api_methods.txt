@@ -1,0 +1,5 @@
+search
+trends
+trends/current
+trends/daily
+trends/weekly 

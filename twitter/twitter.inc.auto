@@ -1,0 +1,716 @@
+<?php
+/*
+*   Twitter API wrapper
+* 
+*   @author vladimir.ignatyev@ridev.ru
+*/
+    require_once ('restclient.inc');
+    require_once ('twitter_errors.inc');
+    require_once ('errorraiser.inc');
+
+//    twitter.inc Configuration 
+
+    if (!$config) {
+        $config = array ();
+    }
+
+    $config['TWITTER_URL'] = 'http://twitter.com/';
+    $config['TWITTER_SEARCH_API'] = 'http://search.twitter.com/';
+
+    class Twitter extends ErrorRaiser
+    {
+        private $_Username;
+        private $_Password;
+        private $_LastQuery;
+        private $_Format = JSON;
+        
+        private $_Connection;
+        
+        private $_FormatAliases = array (JSON=>'json', XML=>'xml', ATOM=>'atom', RSS=>'rss');
+                          
+        function Init ($Username = '', $Password = '', $Format = JSON) {
+            if ($Username && $Password) {
+                $this->_Username = $Username;
+                $this->_Password = $Password;
+            }
+            $_FormatAliases[$this->_Format] = $Format;
+            $this->_FlushError();
+        }
+                       
+        private function Method ($name, $subname, $type, $data, $need_authentification = true) {
+            global $config;
+            $url = $config['TWITTER_URL'].$name.($subname?'/'.$subname:'').'.'.$this->_FormatAliases[$this->_Format];
+            $object = array ();
+            if ($need_authentification) {
+                $object = $this->_Connection->RequestAndDecode($url, $type, $data, array ('Username'=>$this->_Username, 'Password'=>$this->_Password));
+            } else
+            {
+                $object = $this->_Connection->RequestAndDecode($url, $type, $data);
+            }
+            
+            if (!$object) {
+                $err = $this->_Connection->GetLastError();
+                $this->_Error ($err['ErrNo'], $err['Message']);
+                return 0;
+            }
+            return $object;
+        }             
+
+        private function _Search ($name, $data) {
+            global $config; 
+            $url = $config['TWITTER_SEARCH_API'].$name.'.'.$this->_FormatAliases[$this->_Format];
+            $object = $this->_Connection->RequestAndDecode($url, GET, $data);
+            if (!$object) {
+                $err = $this->_Connection->GetLastError();
+                $this->_Error ($err['ErrNo'], $err['Message']);
+                return 0;
+            }
+            return $object;
+        }     
+        
+        function __construct ($Username = '', $Password = '', $Format = JSON) {
+            $this->_Connection = new RestClient ();
+            $this->Init($Username, $Password, $Format);
+        }       
+
+//      The Twitter Search API Wrapper's source code, partically automatically generated using generate_api_methods.php 
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function Search ($data = "") {
+	     return $this->_Search ("search", $data);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function Trends ($data = "") {
+	     return $this->_Search ("trends", $data);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function TrendsCurrent ($data = "") {
+	     return $this->_Search ("trends/current", $data);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function TrendsDaily ($data = "") {
+	     return $this->_Search ("trends/daily", $data);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function TrendsWeekly ($data = "") {
+	     return $this->_Search ("trends/weekly", $data);
+	}
+
+
+
+//      The Twitter REST API Wrapper's source code, partically automatically generated using generate_api_methods.php 
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function StatusesPublicTimeline ($data = "", $param = "") {
+	     return $this->Method ("statuses/public_timeline", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function StatusesHomeTimeline ($data = "", $param = "") {
+	     return $this->Method ("statuses/home_timeline", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function StatusesFriendsTimeline ($data = "", $param = "") {
+	     return $this->Method ("statuses/friends_timeline", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function StatusesUserTimeline ($data = "", $param = "") {
+	     return $this->Method ("statuses/user_timeline", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function StatusesMentions ($data = "", $param = "") {
+	     return $this->Method ("statuses/mentions", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function StatusesRetweetedByMe ($data = "", $param = "") {
+	     return $this->Method ("statuses/retweeted_by_me", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function StatusesRetweetedToMe ($data = "", $param = "") {
+	     return $this->Method ("statuses/retweeted_to_me", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function StatusesRetweetsOfMe ($data = "", $param = "") {
+	     return $this->Method ("statuses/retweets_of_me", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function StatusesShow ($data = "", $param = "") {
+	     return $this->Method ("statuses/show", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function StatusesUpdate ($data = "", $param = "") {
+	     return $this->Method ("statuses/update", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function StatusesDestroy ($data = "", $param = "") {
+	     return $this->Method ("statuses/destroy", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function StatusesRetweet ($data = "", $param = "") {
+	     return $this->Method ("statuses/retweet", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function StatusesRetweets ($data = "", $param = "") {
+	     return $this->Method ("statuses/retweets", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function UsersShow ($data = "", $param = "") {
+	     return $this->Method ("users/show", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function StatusesFriends ($data = "", $param = "") {
+	     return $this->Method ("statuses/friends", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function StatusesFollowers ($data = "", $param = "") {
+	     return $this->Method ("statuses/followers", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function DirectMessages ($data = "", $param = "") {
+	     return $this->Method ("direct_messages", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function DirectMessagesSent ($data = "", $param = "") {
+	     return $this->Method ("direct_messages/sent", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function DirectMessagesNew ($data = "", $param = "") {
+	     return $this->Method ("direct_messages/new", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function DirectMessagesDestroy ($data = "", $param = "") {
+	     return $this->Method ("direct_messages/destroy", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function FriendshipsCreate ($data = "", $param = "") {
+	     return $this->Method ("friendships/create", $param, POST, $data);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function FriendshipsDestroy ($data = "", $param = "") {
+	     return $this->Method ("friendships/destroy", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function FriendshipsExists ($data = "", $param = "") {
+	     return $this->Method ("friendships/exists", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function FriendshipsShow ($data = "", $param = "") {
+	     return $this->Method ("friendships/show", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function FriendsIds ($data = "", $param = "") {
+	     return $this->Method ("friends/ids", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function FollowersIds ($data = "", $param = "") {
+	     return $this->Method ("followers/ids", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function AccountVerifyCredentials ($data = "", $param = "") {
+	     return $this->Method ("account/verify_credentials", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function AccountRateLimitStatus ($data = "", $param = "") {
+	     return $this->Method ("account/rate_limit_status", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function AccountEndSession ($data = "", $param = "") {
+	     return $this->Method ("account/end_session", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function AccountUpdateDeliveryDevice ($data = "", $param = "") {
+	     return $this->Method ("account/update_delivery_device", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function AccountUpdateProfileColors ($data = "", $param = "") {
+	     return $this->Method ("account/update_profile_colors", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function AccountUpdateProfileImage ($data = "", $param = "") {
+	     return $this->Method ("account/update_profile_image", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function AccountUpdateProfileBackgroundImage ($data = "", $param = "") {
+	     return $this->Method ("account/update_profile_background_image", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function AccountUpdateProfile ($data = "", $param = "") {
+	     return $this->Method ("account/update_profile", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function Favorites ($data = "", $param = "") {
+	     return $this->Method ("favorites", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function FavoritesCreate ($data = "", $param = "") {
+	     return $this->Method ("favorites/create", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function FavoritesDestroy ($data = "", $param = "") {
+	     return $this->Method ("favorites/destroy", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function NotificationsFollow ($data = "", $param = "") {
+	     return $this->Method ("notifications/follow", $param, POST, $data);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function NotificationsLeave ($data = "", $param = "") {
+	     return $this->Method ("notifications/leave", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function BlocksCreate ($data = "", $param = "") {
+	     return $this->Method ("blocks/create", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function BlocksDestroy ($data = "", $param = "") {
+	     return $this->Method ("blocks/destroy", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function BlocksExists ($data = "", $param = "") {
+	     return $this->Method ("blocks/exists", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function BlocksBlocking ($data = "", $param = "") {
+	     return $this->Method ("blocks/blocking", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function BlocksBlockingIds ($data = "", $param = "") {
+	     return $this->Method ("blocks/blocking/ids", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function SavedSearches ($data = "", $param = "") {
+	     return $this->Method ("saved_searches", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function SavedSearchesShow ($data = "", $param = "") {
+	     return $this->Method ("saved_searches/show", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function SavedSearchesCreate ($data = "", $param = "") {
+	     return $this->Method ("saved_searches/create", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function SavedSearchesDestroy ($data = "", $param = "") {
+	     return $this->Method ("saved_searches/destroy", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function OauthRequestToken ($data = "", $param = "") {
+	     return $this->Method ("oauth/request_token", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function OauthAuthorize ($data = "", $param = "") {
+	     return $this->Method ("oauth/authorize", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function OauthAuthenticate ($data = "", $param = "") {
+	     return $this->Method ("oauth/authenticate", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function OauthAccessToken ($data = "", $param = "") {
+	     return $this->Method ("oauth/access_token", $param, GET, $data, false);
+	}
+
+	/*
+	* Here will be description of this method
+	* 
+	* @param $data The data will be passed as request parameters.
+	* @param $param Request parameter, passed in URI.
+	* @return 0 if some error occured, response-object otherwise.
+	*/
+	function HelpTest ($data = "", $param = "") {
+	     return $this->Method ("help/test", $param, GET, $data, false);
+	}
+
+      };
+?>
